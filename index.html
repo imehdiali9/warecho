@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>War Echo — Experience History in Virtual Reality</title>
+  <meta name="description"
+    content="Step into the most pivotal moments of human history through immersive VR experiences. From ancient battles to modern revolutions." />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
+</head>
+
+<body>
+
+  <!-- Loading Screen -->
+  <div class="loader" id="loader">
+    <div class="loader-ring"></div>
+    <div class="loader-text">Initializing War Echo</div>
+  </div>
+
+  <!-- Navigation -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-brand">
+      <div class="nav-logo-icon">⚔️</div>
+      <span class="nav-logo">War Echo</span>
+    </div>
+    <ul class="nav-links">
+      <li><a href="#events">Events</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#about">About</a></li>
+    </ul>
+    <button class="nav-cta" onclick="document.getElementById('events').scrollIntoView({behavior:'smooth'})">
+      Start Exploring
+    </button>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero" id="hero">
+    <div class="hero-bg">
+      <img src="assets/hero_background.png" alt="Historical montage" />
+    </div>
+
+    <!-- Floating Particles -->
+    <div class="hero-particles" id="particles"></div>
+
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="hero-badge-dot"></span>
+        WebVR Experience
+      </div>
+      <h1 class="hero-title">
+        Step Into <span class="highlight">History</span>
+      </h1>
+      <p class="hero-subtitle">
+        Experience the most defining moments of human civilization through immersive virtual reality.
+        Walk the battlefields, witness the revolutions, and feel the turning points that shaped our world.
+      </p>
+      <div class="hero-actions">
+        <a href="#events" class="btn btn-primary">
+          🏛️ Explore Events
+        </a>
+        <a href="#features" class="btn btn-ghost">
+          Learn More →
+        </a>
+      </div>
+    </div>
+
+    <div class="hero-scroll-indicator">
+      <span>Scroll</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- Stats Bar -->
+  <div class="stats-bar reveal" id="stats">
+    <div class="stat-item">
+      <div class="stat-number" data-target="4">0</div>
+      <div class="stat-label">Historical Events</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="16">0</div>
+      <div class="stat-label">Interactive Scenes</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="2500">0</div>
+      <div class="stat-label">Years of History</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-number" data-target="360">0</div>
+      <div class="stat-label">Degrees of Immersion</div>
+    </div>
+  </div>
+
+  <!-- Events Section -->
+  <section class="section" id="events">
+    <div class="section-header reveal">
+      <span class="section-tag">Choose Your Era</span>
+      <h2 class="section-title">Step Through the Gates of Time</h2>
+      <p class="section-desc">
+        Each event is a fully interactive VR experience with 360° environments, historical narration, and interactive
+        discovery points.
+      </p>
+    </div>
+
+    <div class="events-grid reveal-stagger" id="events-grid">
+
+      <!-- Card 1: Thermopylae -->
+      <article class="event-card" onclick="enterVR('thermopylae')" id="card-thermopylae">
+        <div class="card-image">
+          <img src="assets/card_thermopylae.png" alt="Battle of Thermopylae" />
+          <span class="card-year">480 BC</span>
+          <div class="card-overlay"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-category">⚔️ Ancient Warfare</div>
+          <h3 class="card-title">Battle of Thermopylae</h3>
+          <p class="card-desc">Stand with the 300 Spartans in the narrow mountain pass as they face the might of the
+            Persian Empire. Experience the courage that defined Western civilization.</p>
+          <div class="card-footer">
+            <div class="card-meta">
+              <span class="card-meta-item">🎯 4 Hotspots</span>
+              <span class="card-meta-item">⏱️ ~8 min</span>
+            </div>
+            <span class="card-enter">Enter VR <span class="arrow">→</span></span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 2: D-Day -->
+      <article class="event-card" onclick="enterVR('dday')" id="card-dday">
+        <div class="card-image">
+          <img src="assets/card_dday.png" alt="D-Day Normandy Landing" />
+          <span class="card-year">1944</span>
+          <div class="card-overlay"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-category">🪖 World War II</div>
+          <h3 class="card-title">D-Day: Normandy Landing</h3>
+          <p class="card-desc">Witness Operation Overlord from the beaches of Normandy. Feel the scale of the largest
+            seaborne invasion in history that turned the tide of WWII.</p>
+          <div class="card-footer">
+            <div class="card-meta">
+              <span class="card-meta-item">🎯 4 Hotspots</span>
+              <span class="card-meta-item">⏱️ ~10 min</span>
+            </div>
+            <span class="card-enter">Enter VR <span class="arrow">→</span></span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 3: Moon Landing -->
+      <article class="event-card" onclick="enterVR('moonlanding')" id="card-moonlanding">
+        <div class="card-image">
+          <img src="assets/card_moonlanding.png" alt="Moon Landing 1969" />
+          <span class="card-year">1969</span>
+          <div class="card-overlay"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-category">🚀 Space Exploration</div>
+          <h3 class="card-title">Apollo 11: Moon Landing</h3>
+          <p class="card-desc">Take one small step onto the lunar surface alongside Neil Armstrong. Gaze back at Earth
+            and experience humanity's greatest leap of exploration.</p>
+          <div class="card-footer">
+            <div class="card-meta">
+              <span class="card-meta-item">🎯 4 Hotspots</span>
+              <span class="card-meta-item">⏱️ ~7 min</span>
+            </div>
+            <span class="card-enter">Enter VR <span class="arrow">→</span></span>
+          </div>
+        </div>
+      </article>
+
+      <!-- Card 4: Berlin Wall -->
+      <article class="event-card" onclick="enterVR('berlinwall')" id="card-berlinwall">
+        <div class="card-image">
+          <img src="assets/card_berlinwall.png" alt="Fall of the Berlin Wall" />
+          <span class="card-year">1989</span>
+          <div class="card-overlay"></div>
+        </div>
+        <div class="card-body">
+          <div class="card-category">🕊️ Modern Revolution</div>
+          <h3 class="card-title">Fall of the Berlin Wall</h3>
+          <p class="card-desc">Join the crowds as the concrete symbol of Cold War division crumbles. Feel the euphoria
+            of reunification and the dawn of a new era in Europe.</p>
+          <div class="card-footer">
+            <div class="card-meta">
+              <span class="card-meta-item">🎯 4 Hotspots</span>
+              <span class="card-meta-item">⏱️ ~8 min</span>
+            </div>
+            <span class="card-enter">Enter VR <span class="arrow">→</span></span>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </section>
+
+  <!-- Features Section -->
+  <section class="section" id="features">
+    <div class="section-header reveal">
+      <span class="section-tag">Why War Echo</span>
+      <h2 class="section-title">History, Reimagined</h2>
+      <p class="section-desc">
+        Built with cutting-edge WebVR technology for a seamless immersive learning experience.
+      </p>
+    </div>
+
+    <div class="features reveal-stagger">
+      <div class="feature-card">
+        <div class="feature-icon">🥽</div>
+        <h3 class="feature-title">Full VR Support</h3>
+        <p class="feature-desc">Works with any WebVR headset — Oculus, Vive, or even Google Cardboard. Also works on
+          desktop and mobile.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎯</div>
+        <h3 class="feature-title">Interactive Hotspots</h3>
+        <p class="feature-desc">Click or gaze at discovery points throughout each scene to reveal historical facts,
+          artifacts, and stories.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">📖</div>
+        <h3 class="feature-title">Guided Narration</h3>
+        <p class="feature-desc">Each scene includes historical narration panels with context, dates, and fascinating
+          details about events.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🌍</div>
+        <h3 class="feature-title">360° Environments</h3>
+        <p class="feature-desc">Fully spherical panoramic scenes that surround you in the historical setting. Look in
+          any direction to explore.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About / CTA Section -->
+  <section class="section" id="about">
+    <div class="section-header reveal">
+      <span class="section-tag">About the Project</span>
+      <h2 class="section-title">Making History Accessible</h2>
+      <p class="section-desc">
+        War Echo transforms textbook knowledge into visceral first-person experiences.
+        Our mission is to make everyone feel the weight and wonder of the moments that shaped humanity.
+      </p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-brand">War Echo</div>
+    <p class="footer-desc">
+      Experience history like never before. Immersive VR journeys through humanity's most pivotal moments.
+    </p>
+    <div class="footer-links">
+      <a href="#events">Events</a>
+      <a href="#features">Features</a>
+      <a href="#about">About</a>
+    </div>
+    <div class="footer-bottom">
+      © 2026 War Echo. Built with A-Frame & WebVR.
+    </div>
+  </footer>
+
+  <script>
+    // ===== Loader =====
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('loader').classList.add('hidden');
+      }, 1200);
+    });
+
+    // ===== Navbar scroll effect =====
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('navbar');
+      nav.classList.toggle('scrolled', window.scrollY > 60);
+    });
+
+    // ===== Scroll Reveal =====
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, { threshold: 0.15 });
+
+    document.querySelectorAll('.reveal, .reveal-stagger').forEach(el => {
+      revealObserver.observe(el);
+    });
+
+    // ===== Animated Counter =====
+    const counterObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          const counters = entry.target.querySelectorAll('.stat-number');
+          counters.forEach(counter => {
+            const target = parseInt(counter.dataset.target);
+            const duration = 2000;
+            const startTime = performance.now();
+            const animate = (now) => {
+              const elapsed = now - startTime;
+              const progress = Math.min(elapsed / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              counter.textContent = Math.floor(target * eased).toLocaleString();
+              if (progress < 1) requestAnimationFrame(animate);
+              else counter.textContent = target.toLocaleString() + (target === 360 ? '°' : '+');
+            };
+            requestAnimationFrame(animate);
+          });
+          counterObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.5 });
+
+    const statsEl = document.getElementById('stats');
+    if (statsEl) counterObserver.observe(statsEl);
+
+    // ===== Particles =====
+    const particleContainer = document.getElementById('particles');
+    for (let i = 0; i < 30; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.animationDelay = Math.random() * 8 + 's';
+      p.style.animationDuration = (6 + Math.random() * 6) + 's';
+      p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+      particleContainer.appendChild(p);
+    }
+
+    // ===== Enter VR =====
+    function enterVR(sceneId) {
+      window.location.href = `vr.html?scene=${sceneId}`;
+    }
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>War Echo — Immersive Experience</title>
+    <meta name="description" content="War Echo — Immersive VR experience of historical events powered by A-Frame." />
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Inter:wght@300;400;600&display=swap"
+        rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #08090c;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* ---- VR Overlay UI ---- */
+        .vr-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .vr-topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 28px;
+            pointer-events: all;
+        }
+
+        .vr-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #e8e6e3;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            text-decoration: none;
+        }
+
+        .vr-back:hover {
+            background: rgba(201, 168, 76, 0.15);
+            border-color: rgba(201, 168, 76, 0.4);
+            color: #c9a84c;
+        }
+
+        .vr-scene-title {
+            padding: 10px 24px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #c9a84c;
+            letter-spacing: 0.04em;
+        }
+
+        .vr-controls-hint {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: #8b8d94;
+            font-size: 0.78rem;
+        }
+
+        /* ---- Bottom Timeline ---- */
+        .vr-timeline {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50px;
+        }
+
+        .timeline-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+
+        .timeline-dot.active {
+            background: #c9a84c;
+            border-color: #c9a84c;
+            box-shadow: 0 0 16px rgba(201, 168, 76, 0.5);
+        }
+
+        .timeline-dot:hover {
+            transform: scale(1.3);
+            border-color: rgba(201, 168, 76, 0.6);
+        }
+
+        .timeline-dot::after {
+            content: attr(data-label);
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
+            padding: 4px 10px;
+            background: rgba(0, 0, 0, 0.85);
+            border-radius: 6px;
+            font-size: 0.7rem;
+            color: #e8e6e3;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+
+        .timeline-dot:hover::after {
+            opacity: 1;
+        }
+
+        .timeline-connector {
+            width: 24px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .timeline-connector.filled {
+            background: rgba(201, 168, 76, 0.4);
+        }
+
+        .timeline-phase-label {
+            color: #8b8d94;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-left: 8px;
+        }
+
+        /* ---- Info Panel Overlay ---- */
+        .info-panel {
+            position: fixed;
+            top: 50%;
+            right: 40px;
+            transform: translateY(-50%) translateX(120%);
+            z-index: 1001;
+            width: 360px;
+            max-height: 70vh;
+            padding: 28px;
+            background: rgba(12, 14, 20, 0.92);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(201, 168, 76, 0.2);
+            border-radius: 20px;
+            color: #e8e6e3;
+            overflow-y: auto;
+            transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+            box-shadow: 0 8px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(201, 168, 76, 0.08);
+        }
+
+        .info-panel.visible {
+            transform: translateY(-50%) translateX(0);
+        }
+
+        .info-panel-close {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #8b8d94;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .info-panel-close:hover {
+            background: rgba(201, 168, 76, 0.15);
+            color: #c9a84c;
+        }
+
+        .info-panel-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            background: rgba(201, 168, 76, 0.12);
+            border: 1px solid rgba(201, 168, 76, 0.25);
+            border-radius: 50px;
+            font-size: 0.68rem;
+            font-weight: 600;
+            color: #c9a84c;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .info-panel h3 {
+            font-family: 'Cinzel', serif;
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #e8e6e3;
+        }
+
+        .info-panel p {
+            font-size: 0.88rem;
+            line-height: 1.7;
+            color: #a0a2a8;
+            margin-bottom: 14px;
+        }
+
+        .info-panel .fact-box {
+            padding: 14px;
+            background: rgba(201, 168, 76, 0.06);
+            border-left: 3px solid #c9a84c;
+            border-radius: 0 8px 8px 0;
+            margin-top: 12px;
+        }
+
+        .info-panel .fact-box strong {
+            color: #c9a84c;
+            font-size: 0.78rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .info-panel .fact-box span {
+            font-size: 0.85rem;
+            color: #a0a2a8;
+        }
+
+        /* ---- Loading ---- */
+        .vr-loader {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            background: #08090c;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            transition: opacity 0.8s, visibility 0.8s;
+        }
+
+        .vr-loader.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .vr-loader-ring {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(255, 255, 255, 0.08);
+            border-top-color: #c9a84c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .vr-loader-text {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            color: #5a5c63;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        /* ---- Crosshair Cursor ---- */
+        .crosshair {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+            z-index: 999;
+            pointer-events: none;
+        }
+
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(201, 168, 76, 0.6);
+            border-radius: 2px;
+        }
+
+        .crosshair::before {
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 2px;
+            transform: translateY(-50%);
+        }
+
+        .crosshair::after {
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            transform: translateX(-50%);
+        }
+
+        /* ---- Responsive ---- */
+        @media (max-width: 768px) {
+            .info-panel {
+                right: 10px;
+                left: 10px;
+                width: auto;
+                top: auto;
+                bottom: 80px;
+                transform: translateY(120%);
+                max-height: 50vh;
+            }
+
+            .info-panel.visible {
+                transform: translateY(0);
+            }
+
+            .vr-topbar {
+                padding: 10px 14px;
+                flex-wrap: wrap;
+                gap: 8px;
+            }
+
+            .vr-controls-hint {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Loading Screen -->
+    <div class="vr-loader" id="vrLoader">
+        <div class="vr-loader-ring"></div>
+        <div class="vr-loader-text" id="loaderText">Loading Scene...</div>
+    </div>
+
+    <!-- Crosshair -->
+    <div class="crosshair" id="crosshair"></div>
+
+    <!-- Overlay UI -->
+    <div class="vr-overlay">
+        <div class="vr-topbar">
+            <a href="index.html" class="vr-back">← Back to Events</a>
+            <div class="vr-scene-title" id="sceneTitle">Loading...</div>
+            <div class="vr-controls-hint">🖱️ Click hotspots · WASD to move · Drag to look</div>
+        </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="vr-timeline" id="timeline"></div>
+
+    <!-- Info Panel -->
+    <div class="info-panel" id="infoPanel">
+        <button class="info-panel-close" onclick="closeInfoPanel()">✕</button>
+        <div id="infoPanelContent"></div>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <a-scene id="vrScene" embedded vr-mode-ui="enabled: true" loading-screen="enabled: false"
+        renderer="antialias: true; colorManagement: true;" style="position: fixed; inset: 0;">
+        <!-- Camera -->
+        <a-entity id="cameraRig" position="0 1.6 0">
+            <a-camera id="camera" look-controls="pointerLockEnabled: false" wasd-controls="acceleration: 20">
+                <a-entity cursor="fuse: false; rayOrigin: mouse" raycaster="objects: .clickable; far: 100"></a-entity>
+            </a-camera>
+        </a-entity>
+
+        <!-- Sky -->
+        <a-sky id="sky" src="" rotation="0 0 0"></a-sky>
+
+        <!-- Ambient Light -->
+        <a-light type="ambient" color="#4a4a5a" intensity="0.6"></a-light>
+        <a-light type="directional" color="#ffeedd" intensity="0.5" position="1 3 2"></a-light>
+
+        <!-- Hotspot Container -->
+        <a-entity id="hotspots"></a-entity>
+
+        <!-- Ground plane (subtle) -->
+        <a-circle id="ground" rotation="-90 0 0" radius="20" color="#111" opacity="0.3"
+            material="shader: flat"></a-circle>
+
+    </a-scene>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
