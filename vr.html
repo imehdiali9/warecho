@@ -490,6 +490,14 @@
     <!-- A-Frame Scene -->
     <a-scene id="vrScene" embedded vr-mode-ui="enabled: true" loading-screen="enabled: false"
         renderer="antialias: true; colorManagement: true;" style="position: fixed; inset: 0;">
+        <!-- Preloaded sky textures (A-Frame's canonical asset pipeline). -->
+        <a-assets timeout="20000">
+            <img id="sky-thermopylae" src="assets/sky_thermopylae.png" crossorigin="anonymous" />
+            <img id="sky-dday" src="assets/sky_dday.png" crossorigin="anonymous" />
+            <img id="sky-moonlanding" src="assets/sky_moonlanding.png" crossorigin="anonymous" />
+            <img id="sky-berlinwall" src="assets/sky_berlinwall.png" crossorigin="anonymous" />
+        </a-assets>
+
         <!-- Camera -->
         <a-entity id="cameraRig" position="0 1.6 0">
             <a-camera id="camera" look-controls="pointerLockEnabled: false" wasd-controls="acceleration: 20">
@@ -497,8 +505,8 @@
             </a-camera>
         </a-entity>
 
-        <!-- Sky -->
-        <a-sky id="sky" src="" rotation="0 0 0"></a-sky>
+        <!-- Sky (texture set at runtime via the material component). -->
+        <a-sky id="sky" material="shader: flat; side: back; color: #1a1a2e" rotation="0 0 0"></a-sky>
 
         <!-- Ambient Light -->
         <a-light type="ambient" color="#4a4a5a" intensity="0.6"></a-light>

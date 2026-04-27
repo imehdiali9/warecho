@@ -11,7 +11,7 @@
     thermopylae: {
       title: 'Battle of Thermopylae',
       year: '480 BC',
-      sky: 'assets/sky_thermopylae.png',
+      sky: '#sky-thermopylae',
       ambientColor: '#5a4a2a',
       lightColor: '#ffe8b0',
       phases: [
@@ -109,7 +109,7 @@
     dday: {
       title: 'D-Day: Normandy Landing',
       year: '1944',
-      sky: 'assets/sky_dday.png',
+      sky: '#sky-dday',
       ambientColor: '#3a4a5a',
       lightColor: '#c8d8e8',
       phases: [
@@ -207,7 +207,7 @@
     moonlanding: {
       title: 'Apollo 11: Moon Landing',
       year: '1969',
-      sky: 'assets/sky_moonlanding.png',
+      sky: '#sky-moonlanding',
       ambientColor: '#1a1a2e',
       lightColor: '#e8e8ff',
       phases: [
@@ -313,7 +313,7 @@
     berlinwall: {
       title: 'Fall of the Berlin Wall',
       year: '1989',
-      sky: 'assets/sky_berlinwall.png',
+      sky: '#sky-berlinwall',
       ambientColor: '#3a3025',
       lightColor: '#ffd699',
       phases: [
@@ -476,10 +476,21 @@
     document.getElementById('loaderText').textContent = `Loading ${currentScene.title}...`;
     document.title = `War Echo — ${currentScene.title}`;
 
-    // Preload sky image
-    const skyImg = new Image();
-    skyImg.onload = () => {
-      document.getElementById('sky').setAttribute('src', currentScene.sky);
+    // Wait for the A-Frame scene (and its <a-assets> preload) to finish before
+    // touching the sky's material; otherwise the texture binding can be lost on
+    // some browsers and the user is left with an empty black sphere.
+    const aScene = document.getElementById('vrScene');
+    const startScene = () => {
+      const sky = document.getElementById('sky');
+      // Use the material component directly. The <a-sky> primitive's `src`
+      // attribute mapping doesn't always propagate to the underlying material
+      // when set after init; updating material.src is the documented path.
+      sky.setAttribute('material', {
+        shader: 'flat',
+        side: 'back',
+        src: currentScene.sky
+      });
+
       buildTimeline();
       loadPhase(0);
 
@@ -492,20 +503,25 @@
       // Hide loader
       setTimeout(() => {
         document.getElementById('vrLoader').classList.add('hidden');
-      }, 1500);
+      }, 800);
     };
 
-    skyImg.onerror = () => {
-      // Still load scene even if sky image fails
-      document.getElementById('sky').setAttribute('color', '#1a1a2e');
-      buildTimeline();
-      loadPhase(0);
+    if (aScene && aScene.hasLoaded) {
+      startScene();
+    } else if (aScene) {
+      aScene.addEventListener('loaded', startScene, { once: true });
+      // Fallback: if `loaded` never fires (asset timeout, browser quirk), still
+      // start the scene after the <a-assets> timeout window so the user isn't
+      // stuck on the loader forever.
       setTimeout(() => {
-        document.getElementById('vrLoader').classList.add('hidden');
-      }, 1500);
-    };
-
-    skyImg.src = currentScene.sky;
+        if (!currentScene) return;
+        if (!document.getElementById('vrLoader').classList.contains('hidden')) {
+          startScene();
+        }
+      }, 21000);
+    } else {
+      startScene();
+    }
   }
 
   // =========================================================
