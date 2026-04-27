@@ -7,6 +7,22 @@
   <title>War Echo — Experience History in Virtual Reality</title>
   <meta name="description"
     content="Step into the most pivotal moments of human history through immersive VR experiences. From ancient battles to modern revolutions." />
+  <meta name="theme-color" content="#08090c" />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="War Echo — Experience History in Virtual Reality" />
+  <meta property="og:description"
+    content="Step into the most pivotal moments of human history through immersive VR experiences." />
+  <meta property="og:image" content="assets/hero_background.png" />
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="War Echo — Experience History in Virtual Reality" />
+  <meta name="twitter:description"
+    content="Step into the most pivotal moments of human history through immersive VR experiences." />
+  <meta name="twitter:image" content="assets/hero_background.png" />
+
   <link rel="stylesheet" href="styles.css" />
   <link rel="icon"
     href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚔️</text></svg>" />
@@ -81,14 +97,14 @@
     </div>
     <div class="stat-item">
       <div class="stat-number" data-target="16">0</div>
-      <div class="stat-label">Interactive Scenes</div>
+      <div class="stat-label">Interactive Hotspots</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number" data-target="2500">0</div>
+      <div class="stat-number" data-target="2500" data-suffix="+">0</div>
       <div class="stat-label">Years of History</div>
     </div>
     <div class="stat-item">
-      <div class="stat-number" data-target="360">0</div>
+      <div class="stat-number" data-target="360" data-suffix="°">0</div>
       <div class="stat-label">Degrees of Immersion</div>
     </div>
   </div>
@@ -107,7 +123,8 @@
     <div class="events-grid reveal-stagger" id="events-grid">
 
       <!-- Card 1: Thermopylae -->
-      <article class="event-card" onclick="enterVR('thermopylae')" id="card-thermopylae">
+      <button type="button" class="event-card" onclick="enterVR('thermopylae')" id="card-thermopylae"
+        aria-label="Enter VR experience: Battle of Thermopylae, 480 BC">
         <div class="card-image">
           <img src="assets/card_thermopylae.png" alt="Battle of Thermopylae" />
           <span class="card-year">480 BC</span>
@@ -126,10 +143,11 @@
             <span class="card-enter">Enter VR <span class="arrow">→</span></span>
           </div>
         </div>
-      </article>
+      </button>
 
       <!-- Card 2: D-Day -->
-      <article class="event-card" onclick="enterVR('dday')" id="card-dday">
+      <button type="button" class="event-card" onclick="enterVR('dday')" id="card-dday"
+        aria-label="Enter VR experience: D-Day Normandy Landing, 1944">
         <div class="card-image">
           <img src="assets/card_dday.png" alt="D-Day Normandy Landing" />
           <span class="card-year">1944</span>
@@ -148,10 +166,11 @@
             <span class="card-enter">Enter VR <span class="arrow">→</span></span>
           </div>
         </div>
-      </article>
+      </button>
 
       <!-- Card 3: Moon Landing -->
-      <article class="event-card" onclick="enterVR('moonlanding')" id="card-moonlanding">
+      <button type="button" class="event-card" onclick="enterVR('moonlanding')" id="card-moonlanding"
+        aria-label="Enter VR experience: Apollo 11 Moon Landing, 1969">
         <div class="card-image">
           <img src="assets/card_moonlanding.png" alt="Moon Landing 1969" />
           <span class="card-year">1969</span>
@@ -170,10 +189,11 @@
             <span class="card-enter">Enter VR <span class="arrow">→</span></span>
           </div>
         </div>
-      </article>
+      </button>
 
       <!-- Card 4: Berlin Wall -->
-      <article class="event-card" onclick="enterVR('berlinwall')" id="card-berlinwall">
+      <button type="button" class="event-card" onclick="enterVR('berlinwall')" id="card-berlinwall"
+        aria-label="Enter VR experience: Fall of the Berlin Wall, 1989">
         <div class="card-image">
           <img src="assets/card_berlinwall.png" alt="Fall of the Berlin Wall" />
           <span class="card-year">1989</span>
@@ -192,7 +212,7 @@
             <span class="card-enter">Enter VR <span class="arrow">→</span></span>
           </div>
         </div>
-      </article>
+      </button>
 
     </div>
   </section>
@@ -264,11 +284,14 @@
   </footer>
 
   <script>
+    // ===== Reduced motion preference =====
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     // ===== Loader =====
     window.addEventListener('load', () => {
-      setTimeout(() => {
-        document.getElementById('loader').classList.add('hidden');
-      }, 1200);
+      const hideLoader = () => document.getElementById('loader').classList.add('hidden');
+      if (prefersReducedMotion) hideLoader();
+      else setTimeout(hideLoader, 1200);
     });
 
     // ===== Navbar scroll effect =====
@@ -291,21 +314,34 @@
     });
 
     // ===== Animated Counter =====
+    function formatStat(counter, value) {
+      const suffix = counter.dataset.suffix || '';
+      counter.textContent = value.toLocaleString() + suffix;
+    }
+
     const counterObserver = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
           const counters = entry.target.querySelectorAll('.stat-number');
           counters.forEach(counter => {
-            const target = parseInt(counter.dataset.target);
+            const target = parseInt(counter.dataset.target, 10);
+            if (prefersReducedMotion) {
+              formatStat(counter, target);
+              return;
+            }
             const duration = 2000;
             const startTime = performance.now();
             const animate = (now) => {
               const elapsed = now - startTime;
               const progress = Math.min(elapsed / duration, 1);
               const eased = 1 - Math.pow(1 - progress, 3);
-              counter.textContent = Math.floor(target * eased).toLocaleString();
-              if (progress < 1) requestAnimationFrame(animate);
-              else counter.textContent = target.toLocaleString() + (target === 360 ? '°' : '+');
+              const current = Math.floor(target * eased);
+              if (progress < 1) {
+                counter.textContent = current.toLocaleString();
+                requestAnimationFrame(animate);
+              } else {
+                formatStat(counter, target);
+              }
             };
             requestAnimationFrame(animate);
           });
@@ -317,21 +353,23 @@
     const statsEl = document.getElementById('stats');
     if (statsEl) counterObserver.observe(statsEl);
 
-    // ===== Particles =====
-    const particleContainer = document.getElementById('particles');
-    for (let i = 0; i < 30; i++) {
-      const p = document.createElement('div');
-      p.className = 'particle';
-      p.style.left = Math.random() * 100 + '%';
-      p.style.animationDelay = Math.random() * 8 + 's';
-      p.style.animationDuration = (6 + Math.random() * 6) + 's';
-      p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
-      particleContainer.appendChild(p);
+    // ===== Particles (skipped for reduced motion) =====
+    if (!prefersReducedMotion) {
+      const particleContainer = document.getElementById('particles');
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.animationDelay = Math.random() * 8 + 's';
+        p.style.animationDuration = (6 + Math.random() * 6) + 's';
+        p.style.width = p.style.height = (2 + Math.random() * 3) + 'px';
+        particleContainer.appendChild(p);
+      }
     }
 
     // ===== Enter VR =====
     function enterVR(sceneId) {
-      window.location.href = `vr.html?scene=${sceneId}`;
+      window.location.href = `vr.html?scene=${encodeURIComponent(sceneId)}`;
     }
   </script>
 

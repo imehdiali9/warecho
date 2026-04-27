@@ -423,16 +423,51 @@
   let currentScene = null;
   let currentPhaseIndex = 0;
   let infoPanelOpen = false;
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // =========================================================
+  //  ERROR OVERLAY
+  // =========================================================
+  function showError(title, message) {
+    const err = document.getElementById('vrError');
+    if (!err) return;
+    const titleEl = document.getElementById('vrErrorTitle');
+    const messageEl = document.getElementById('vrErrorMessage');
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+    err.classList.add('visible');
+    const loader = document.getElementById('vrLoader');
+    if (loader) loader.classList.add('hidden');
+  }
 
   // =========================================================
   //  INIT
   // =========================================================
   function init() {
+    // The CDN watchdog can be cleared once we get this far
+    if (window.__aframeWatchdog) {
+      clearTimeout(window.__aframeWatchdog);
+      window.__aframeWatchdog = null;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const sceneId = params.get('scene');
 
-    if (!sceneId || !SCENES[sceneId]) {
-      window.location.href = 'index.html';
+    if (!sceneId) {
+      showError(
+        'No scene selected',
+        'This page needs a scene to load. Pick one from the events list.'
+      );
+      return;
+    }
+
+    if (!SCENES[sceneId]) {
+      showError(
+        'Scene not found',
+        `We don't have a VR experience for "${sceneId}". It may have been moved or renamed.`
+      );
       return;
     }
 
@@ -716,15 +751,35 @@
     const panel = document.getElementById('infoPanel');
     const content = document.getElementById('infoPanelContent');
 
-    content.innerHTML = `
-      <div class="info-panel-tag">${data.tag}</div>
-      <h3>${data.title}</h3>
-      <p>${data.text}</p>
-      <div class="fact-box">
-        <strong>💡 Did You Know?</strong>
-        <span>${data.fact}</span>
-      </div>
-    `;
+    // Build via DOM APIs so user-supplied scene text can never inject markup.
+    content.replaceChildren();
+
+    const tag = document.createElement('div');
+    tag.className = 'info-panel-tag';
+    tag.textContent = data.tag;
+
+    const title = document.createElement('h3');
+    title.textContent = data.title;
+
+    const body = document.createElement('p');
+    body.textContent = data.text;
+
+    const factBox = document.createElement('div');
+    factBox.className = 'fact-box';
+
+    const factLabel = document.createElement('strong');
+    factLabel.textContent = '💡 Did You Know?';
+
+    const factText = document.createElement('span');
+    factText.textContent = data.fact;
+
+    factBox.appendChild(factLabel);
+    factBox.appendChild(factText);
+
+    content.appendChild(tag);
+    content.appendChild(title);
+    content.appendChild(body);
+    content.appendChild(factBox);
 
     panel.classList.add('visible');
     infoPanelOpen = true;
@@ -769,7 +824,11 @@
   //  AMBIENT PARTICLES IN VR
   // =========================================================
   function createAmbientParticles() {
-    const hotspotContainer = document.getElementById('hotspots');
+    // Particles live in their own container so they survive phase changes
+    // (loadPhase() clears #hotspots on every transition).
+    const container = document.getElementById('ambient-particles');
+    if (!container) return;
+    if (prefersReducedMotion) return;
 
     for (let i = 0; i < 40; i++) {
       const particle = document.createElement('a-sphere');
@@ -792,21 +851,23 @@
         easing: 'easeInOutSine'
       });
 
-      hotspotContainer.appendChild(particle);
+      container.appendChild(particle);
     }
   }
 
   // =========================================================
   //  START
   // =========================================================
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      init();
-      createAmbientParticles();
-    });
-  } else {
+  function start() {
     init();
-    createAmbientParticles();
+    // Only seed particles if init() found a valid scene
+    if (currentScene) createAmbientParticles();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
   }
 
 })();
