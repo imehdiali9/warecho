@@ -11,7 +11,7 @@
     thermopylae: {
       title: 'Battle of Thermopylae',
       year: '480 BC',
-      sky: 'assets/sky_thermopylae.png',
+      sky: '#sky-thermopylae',
       ambientColor: '#5a4a2a',
       lightColor: '#ffe8b0',
       phases: [
@@ -109,7 +109,7 @@
     dday: {
       title: 'D-Day: Normandy Landing',
       year: '1944',
-      sky: 'assets/sky_dday.png',
+      sky: '#sky-dday',
       ambientColor: '#3a4a5a',
       lightColor: '#c8d8e8',
       phases: [
@@ -207,7 +207,7 @@
     moonlanding: {
       title: 'Apollo 11: Moon Landing',
       year: '1969',
-      sky: 'assets/sky_moonlanding.png',
+      sky: '#sky-moonlanding',
       ambientColor: '#1a1a2e',
       lightColor: '#e8e8ff',
       phases: [
@@ -313,7 +313,7 @@
     berlinwall: {
       title: 'Fall of the Berlin Wall',
       year: '1989',
-      sky: 'assets/sky_berlinwall.png',
+      sky: '#sky-berlinwall',
       ambientColor: '#3a3025',
       lightColor: '#ffd699',
       phases: [
@@ -423,16 +423,51 @@
   let currentScene = null;
   let currentPhaseIndex = 0;
   let infoPanelOpen = false;
+  const prefersReducedMotion =
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // =========================================================
+  //  ERROR OVERLAY
+  // =========================================================
+  function showError(title, message) {
+    const err = document.getElementById('vrError');
+    if (!err) return;
+    const titleEl = document.getElementById('vrErrorTitle');
+    const messageEl = document.getElementById('vrErrorMessage');
+    if (titleEl) titleEl.textContent = title;
+    if (messageEl) messageEl.textContent = message;
+    err.classList.add('visible');
+    const loader = document.getElementById('vrLoader');
+    if (loader) loader.classList.add('hidden');
+  }
 
   // =========================================================
   //  INIT
   // =========================================================
   function init() {
+    // The CDN watchdog can be cleared once we get this far
+    if (window.__aframeWatchdog) {
+      clearTimeout(window.__aframeWatchdog);
+      window.__aframeWatchdog = null;
+    }
+
     const params = new URLSearchParams(window.location.search);
     const sceneId = params.get('scene');
 
-    if (!sceneId || !SCENES[sceneId]) {
-      window.location.href = 'index.html';
+    if (!sceneId) {
+      showError(
+        'No scene selected',
+        'This page needs a scene to load. Pick one from the events list.'
+      );
+      return;
+    }
+
+    if (!SCENES[sceneId]) {
+      showError(
+        'Scene not found',
+        `We don't have a VR experience for "${sceneId}". It may have been moved or renamed.`
+      );
       return;
     }
 
@@ -441,10 +476,21 @@
     document.getElementById('loaderText').textContent = `Loading ${currentScene.title}...`;
     document.title = `War Echo — ${currentScene.title}`;
 
-    // Preload sky image
-    const skyImg = new Image();
-    skyImg.onload = () => {
-      document.getElementById('sky').setAttribute('src', currentScene.sky);
+    // Wait for the A-Frame scene (and its <a-assets> preload) to finish before
+    // touching the sky's material; otherwise the texture binding can be lost on
+    // some browsers and the user is left with an empty black sphere.
+    const aScene = document.getElementById('vrScene');
+    const startScene = () => {
+      const sky = document.getElementById('sky');
+      // Use the material component directly. The <a-sky> primitive's `src`
+      // attribute mapping doesn't always propagate to the underlying material
+      // when set after init; updating material.src is the documented path.
+      sky.setAttribute('material', {
+        shader: 'flat',
+        side: 'back',
+        src: currentScene.sky
+      });
+
       buildTimeline();
       loadPhase(0);
 
@@ -457,20 +503,25 @@
       // Hide loader
       setTimeout(() => {
         document.getElementById('vrLoader').classList.add('hidden');
-      }, 1500);
+      }, 800);
     };
 
-    skyImg.onerror = () => {
-      // Still load scene even if sky image fails
-      document.getElementById('sky').setAttribute('color', '#1a1a2e');
-      buildTimeline();
-      loadPhase(0);
+    if (aScene && aScene.hasLoaded) {
+      startScene();
+    } else if (aScene) {
+      aScene.addEventListener('loaded', startScene, { once: true });
+      // Fallback: if `loaded` never fires (asset timeout, browser quirk), still
+      // start the scene after the <a-assets> timeout window so the user isn't
+      // stuck on the loader forever.
       setTimeout(() => {
-        document.getElementById('vrLoader').classList.add('hidden');
-      }, 1500);
-    };
-
-    skyImg.src = currentScene.sky;
+        if (!currentScene) return;
+        if (!document.getElementById('vrLoader').classList.contains('hidden')) {
+          startScene();
+        }
+      }, 21000);
+    } else {
+      startScene();
+    }
   }
 
   // =========================================================
@@ -716,15 +767,35 @@
     const panel = document.getElementById('infoPanel');
     const content = document.getElementById('infoPanelContent');
 
-    content.innerHTML = `
-      <div class="info-panel-tag">${data.tag}</div>
-      <h3>${data.title}</h3>
-      <p>${data.text}</p>
-      <div class="fact-box">
-        <strong>💡 Did You Know?</strong>
-        <span>${data.fact}</span>
-      </div>
-    `;
+    // Build via DOM APIs so user-supplied scene text can never inject markup.
+    content.replaceChildren();
+
+    const tag = document.createElement('div');
+    tag.className = 'info-panel-tag';
+    tag.textContent = data.tag;
+
+    const title = document.createElement('h3');
+    title.textContent = data.title;
+
+    const body = document.createElement('p');
+    body.textContent = data.text;
+
+    const factBox = document.createElement('div');
+    factBox.className = 'fact-box';
+
+    const factLabel = document.createElement('strong');
+    factLabel.textContent = '💡 Did You Know?';
+
+    const factText = document.createElement('span');
+    factText.textContent = data.fact;
+
+    factBox.appendChild(factLabel);
+    factBox.appendChild(factText);
+
+    content.appendChild(tag);
+    content.appendChild(title);
+    content.appendChild(body);
+    content.appendChild(factBox);
 
     panel.classList.add('visible');
     infoPanelOpen = true;
@@ -769,7 +840,11 @@
   //  AMBIENT PARTICLES IN VR
   // =========================================================
   function createAmbientParticles() {
-    const hotspotContainer = document.getElementById('hotspots');
+    // Particles live in their own container so they survive phase changes
+    // (loadPhase() clears #hotspots on every transition).
+    const container = document.getElementById('ambient-particles');
+    if (!container) return;
+    if (prefersReducedMotion) return;
 
     for (let i = 0; i < 40; i++) {
       const particle = document.createElement('a-sphere');
@@ -792,21 +867,23 @@
         easing: 'easeInOutSine'
       });
 
-      hotspotContainer.appendChild(particle);
+      container.appendChild(particle);
     }
   }
 
   // =========================================================
   //  START
   // =========================================================
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-      init();
-      createAmbientParticles();
-    });
-  } else {
+  function start() {
     init();
-    createAmbientParticles();
+    // Only seed particles if init() found a valid scene
+    if (currentScene) createAmbientParticles();
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
   }
 
 })();
